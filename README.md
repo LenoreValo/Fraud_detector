@@ -45,7 +45,7 @@ git clone https://git.astondevs.ru/laboratory/hadoop/lab-projects/wave18_team_b.
 
 ## Схема архитектуры проекта
 
- [Схема архитектуры проекта](https://git.astondevs.ru/laboratory/hadoop/lab-projects/wave18_team_b/images/Schema.png)
+![Схема архитектуры проекта](/images/Schema.png)
 
 ### Пояснение к слоям GreenPlum:
 ODS-слой: Внешние таблицы , куда будут приходить сырые данные из hdfs (разнообразные базы данных о клиентах, их счетах и информация о транзакциях) в режиме реального времени. 
