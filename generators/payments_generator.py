@@ -6,7 +6,7 @@ import pandas as pd
 # Функция получения данных о платежах клиентов
 def get_payments_info():
     # Параметры генерации данных
-    num_clients = 10000
+    num_clients = 1000
     max_payments_per_client = 50
 
     def random_date(start, end):

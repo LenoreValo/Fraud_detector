@@ -6,7 +6,7 @@ import numpy as np
 def get_client_info():
     fake = Faker()
     # Кол-во клиентов
-    num_clients = 10000
+    num_clients = 1000
     client_data = []
     for client_id in range(1, num_clients + 1):
         client_data.append({

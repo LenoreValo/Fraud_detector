@@ -8,7 +8,7 @@ from faker import Faker
 def get_transactions_info():
     fake = Faker()
     # Параметры генерации данных
-    num_clients = 10000
+    num_clients = 1000
     max_transactions_per_client = 150
 
     def random_date(start, end):

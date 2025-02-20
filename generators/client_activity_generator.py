@@ -8,7 +8,7 @@ from faker import Faker
 def get_client_activity_info():
     fake = Faker()
     # Параметры генерации данных
-    num_clients = 10000
+    num_clients = 1000
     max_activities_per_client = 100
 
     def random_date(start, end):
