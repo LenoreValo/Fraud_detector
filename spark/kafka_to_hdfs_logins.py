@@ -115,5 +115,4 @@ if not query.isActive:
     df_final.write.mode("overwrite").option("header", "true").csv(final_output_path)
 
     print(f"Данные успешно сохранены в {final_output_path}")
-    
-
+ 
