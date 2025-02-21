@@ -13,7 +13,8 @@ from generators.transactions_generator import get_transactions_info
 def create_kafka_producer(kafka_server):
     config = {
         'bootstrap.servers': kafka_server,  # Адрес сервера Kafka
-        'acks': 'all'  # Подтверждение доставки (можно настроить)
+        'acks': 'all',  # Подтверждение доставки (можно настроить)
+        'enable.idempotence': True          # Включаем идемпотентность для предотвращения дублирования
     }
     producer = Producer(config)
     return producer
@@ -34,36 +35,24 @@ def delivery_report(err, msg):
     else:
         print(f"Сообщение успешно отправлено в топик {msg.topic()} с offset {msg.offset()}")
 
-def dataframe_to_json(df):
-    """
-    Сериализует DataFrame в JSON, обрабатывая даты и датавремя.
-
-    :param df: Pandas DataFrame для сериализации.
-    :return: JSON-строка.
-    """
-    # Преобразование DataFrame в словарь, где значения дат/датавремени конвертируются в строки
-    def convert_value(value):
-        if isinstance(value, datetime):
-            return value.isoformat()  # Преобразование datetime в строку ISO
-        elif isinstance(value, date):
-            return value.strftime('%Y-%m-%d')  # Преобразование date в строку
-        else:
-            return value  # Оставляем остальные значения без изменений
-
-    # Создаем список словарей из DataFrame
-    records = df.to_dict(orient='records')
-    serialized_records = [{key: convert_value(value) for key, value in record.items()} for record in records]
-
-    # Преобразуем список словарей в JSON
-    return json.dumps(serialized_records, ensure_ascii=False, indent=4)
-
 # Отправка датафрейма в Kafka
 def send_df_to_kafka(df, topic, producer):
     for _, row in df.iterrows():
-        # Преобразование строки DataFrame в словарь, затем в JSON
-        message = dataframe_to_json(df)
+        # Функция преобразования значения в строку ISO
+        def convert_value(value):
+            if isinstance(value, datetime):
+                return value.isoformat()  # Преобразование datetime в строку ISO
+            elif isinstance(value, date):
+                return value.strftime('%Y-%m-%d')  # Преобразование date в строку
+            else:
+                return value  # Оставляем остальные значения без изменений
+    # Создаем список словарей из DataFrame, преобразуя значения
+        row_dict = row.to_dict()
+        for key, val in row_dict.items():
+            row_dict[key] = convert_value(val)
+        # Преобразование в JSON
+        message = json.dumps(row_dict).encode('utf-8')
         send_message(producer, topic, message)
-    
     # Ожидание завершения отправки всех сообщений
     producer.flush()
 
@@ -93,11 +82,11 @@ if __name__ == "__main__":
     producer_payments = create_kafka_producer(kafka_server)
     producer_transaction = create_kafka_producer(kafka_server)
     
-    # Отправка данных из DataFrame в Kafka
+    # Отправка данных из DataFrame в Kafka 
     send_df_to_kafka(clients_df, kafka_topic_clients, producer_clients)
     send_df_to_kafka(client_activity_df, kafka_topic_activity, producer_client_activity)
     send_df_to_kafka(logins_df, kafka_topic_logins, producer_logins)
     send_df_to_kafka(payments_df, kafka_topic_payments, producer_payments)
     send_df_to_kafka(transactions_df, kafka_topic_transactions, producer_transaction)
-    
+
     print("Данные успешно отправлены в Kafka")
