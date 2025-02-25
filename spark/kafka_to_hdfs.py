@@ -87,13 +87,17 @@ def import_table_kafka_to_hdfs(hdfs_server, user_hdfs, kafka_topic, kafka_bootst
     # Определяем схему для JSON
     json_schema = StructType(schema_list)
 
-    # Парсинг JSON 
+    # Парсинг JSON, очистка от NaN значений в ключевом столбце
     first_key = list(schema.keys())[0]
     if "raw_data" in merged_df.columns:
         df_parsed = merged_df.withColumn("json_data", from_json(col("raw_data"), json_schema))
-        df_filtered = df_parsed.select("json_data.*").filter(col(first_key).isNotNull())
+        # Выбор всех колонок из json_data
+        df_selected = df_parsed.select("json_data.*")
+        # Удаление строк, где first_key содержит null
+        df_filtered = df_selected.dropna(subset=[first_key])
+        #df_filtered = df_parsed.select("json_data.*").filter(col(first_key).isNotNull())
     else:
-        df_filtered = merged_df.filter(col(first_key).isNotNull())
+        df_filtered = merged_df.dropna(subset=[first_key])
 
     # Создаем список выражений для select
     expressions = []
