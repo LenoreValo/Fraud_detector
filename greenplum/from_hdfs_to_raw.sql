@@ -10,19 +10,19 @@ create schema if not exists raw;
 -- Шаг 1: Создание внешней таблицы для всех CSV-файлов в HDFS
 drop foreign table if exists raw.hdfs_clients_e_krylova;
 CREATE EXTERNAL TABLE raw.hdfs_clients_e_krylova (
-	client_id text,
+	client_id float4,
 	client_first_name text,
 	client_last_name text,
 	client_email text,
 	client_phone text,
 	client_address text,
-	client_birthday text
+	client_birthday date
 )
 LOCATION ('pxf://user/e.krylova/study_project_b/clients/csv_files/*.csv?PROFILE=hdfs:text')
 FORMAT 'CSV' (header=true);
 
 -- Шаг 2: Проверка данных
-select * from raw.hdfs_clients_e_krylova order by client_id limit 10 ;
+select * from raw.hdfs_clients_e_krylova limit 10 ;
 
 -----------------------------------------------------------------------------------------------------------------
 -- 2. Импорт данных с информацией об активности клиентов
@@ -42,8 +42,6 @@ FORMAT 'CSV' (header=true);
 
 -- Шаг 2: Проверка данных
 select * from raw.hdfs_clients_activity_e_krylova limit 10 ;
---select client_id, activity_type from hdfs_clients_activity_e_krylova where activity_type like 'activity_type';
--- SELECT COUNT(*) AS total_rows FROM raw.hdfs_clients_activity_e_krylova;
 
 -----------------------------------------------------------------------------------------------------------------
 -- 3. Импорт данных с информацией о логинах
