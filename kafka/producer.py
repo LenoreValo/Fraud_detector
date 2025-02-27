@@ -8,6 +8,54 @@ from generators.client_activity_generator import get_client_activity_info
 from generators.logins_generator import get_logins_info
 from generators.payments_generator import get_payments_info
 from generators.transactions_generator import get_transactions_info
+from confluent_kafka.admin import AdminClient, NewTopic, NewTopic
+
+#---------------------------------------------------------------------------------------------
+# Глобальные переменные
+
+# Адрес удаленного сервера Kafka
+kafka_server = '172.17.0.13:9092'  # сервер Kafka
+# Имена топиков Kafka
+kafka_topic_clients = "e_krylova_clients_info"
+kafka_topic_activity = "e_krylova_client_activity_info"
+kafka_topic_logins = "e_krylova_logins_info"
+kafka_topic_payments = "e_krylova_payments_info"
+kafka_topic_transactions = "e_krylova_transactions_info"
+#---------------------------------------------------------------------------------------------
+# ОЧИСТКА ТОПИКА
+
+# Настройка подключения к Kafka
+admin_client = AdminClient({'bootstrap.servers': kafka_server})
+
+def recreate_topic(topic_name, num_partitions=1, replication_factor=1):
+    # Удаляем топик
+    try:
+        fs = admin_client.delete_topics([topic_name])
+        for topic, f in fs.items():
+            f.result()  # Ждем завершения операции
+            print(f"Топик {topic} удален.")
+    except Exception as e:
+        print(f"Ошибка при удалении топика {topic_name}: {e}")
+    
+    # Создаем новый топик
+    new_topic = NewTopic(topic_name, num_partitions=num_partitions, replication_factor=replication_factor)
+    try:
+        fs = admin_client.create_topics([new_topic])
+        for topic, f in fs.items():
+            f.result()  # Ждем завершения операции
+            print(f"Топик {topic} создан заново.")
+    except Exception as e:
+        print(f"Ошибка при создании топика {topic_name}: {e}")
+
+# Очистка конкретных топиков перед загрузкой новых данных
+recreate_topic(kafka_topic_clients)
+recreate_topic(kafka_topic_activity)
+recreate_topic(kafka_topic_logins)
+recreate_topic(kafka_topic_payments)
+recreate_topic(kafka_topic_transactions)
+
+#---------------------------------------------------------------------------------------------
+# ЗАГРУЗКА ДАННЫХ В KAFKA
 
 # Создание Kafka Producer
 def create_kafka_producer(kafka_server):
@@ -57,23 +105,13 @@ def send_df_to_kafka(df, topic, producer):
     producer.flush()
 
 # Использование
-if __name__ == "__main__":
-    # Адрес удаленного сервера Kafka
-    kafka_server = '172.17.0.13:9092'  # сервер Kafka
-    
+if __name__ == "__main__":  
     # Получаем датафреймы с информациями о клиентах, активностях, логинах, платежах и транзакциях
     clients_df = get_client_info()
     client_activity_df = get_client_activity_info()
     logins_df = get_logins_info()
     payments_df = get_payments_info()
     transactions_df = get_transactions_info()
-    
-    # Имена топиков Kafka
-    kafka_topic_clients = "e_krylova_clients_info"
-    kafka_topic_activity = "e_krylova_client_activity_info"
-    kafka_topic_logins = "e_krylova_logins_info"
-    kafka_topic_payments = "e_krylova_payments_info"
-    kafka_topic_transactions = "e_krylova_transactions_info"
     
     # Создание продьюсеров Kafka
     producer_clients = create_kafka_producer(kafka_server)

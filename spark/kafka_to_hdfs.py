@@ -1,8 +1,29 @@
 import findspark
-from pyspark.sql.types import StructType, StructField, DoubleType, StringType, TimestampType, IntegerType
+from pyspark.sql.types import StructType, StructField, DoubleType, StringType, TimestampType
 from pyspark.sql.functions import col, from_json
 from pyspark.sql import SparkSession
 import os
+import subprocess
+
+#-------------------------------------------------------------------------------------------------------------------
+# УДАЛЕНИЕ ПАПКИ В HDFS, ГДЕ ХРАНЯТСЯ ДАННЫЕ
+
+folder_name_global = 'study_project_b'
+# Путь к директории в HDFS
+hdfs_path = f"hdfs://172.17.0.23:8020/user/e.krylova/{folder_name_global}"
+
+# Команда для удаления директории
+command = f"hdfs dfs -rm -r {hdfs_path}"
+
+# Выполнение команды
+try:
+    result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    print(f"Директория {hdfs_path} успешно удалена.")
+except subprocess.CalledProcessError as e:
+    print(f"Ошибка при удалении директории: {e.stderr.decode('utf-8')}")
+
+#-------------------------------------------------------------------------------------------------------------------
+# ЗАГРУЗКА ДАННЫХ ИЗ KAFKA В HDFS 
 
 findspark.init()
 
@@ -13,23 +34,24 @@ kafka_bootstrap_servers = "172.17.0.13:9092"
 hdfs_server = '172.17.0.23:8020'
 user_hdfs = 'e.krylova'
 
-# Создание SparkSession
-spark = SparkSession.builder \
-    .appName("Kafka_To_HDFS") \
-    .getOrCreate()
-
-# Вывод ссылки в Spark UI
-print("Активные Spark сессии:", spark.sparkContext.uiWebUrl)
-
-spark.conf.set("spark.sql.adaptive.enabled", "false")
-
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Функция импорта данных из Kafka в HDFS
 def import_table_kafka_to_hdfs(hdfs_server, user_hdfs, kafka_topic, kafka_bootstrap_servers, folder_name, schema):
+
+    # Создание SparkSession
+    spark = SparkSession.builder \
+        .appName("Kafka_To_HDFS") \
+        .getOrCreate()
+
+    # Вывод ссылки в Spark UI
+    print("Активные Spark сессии:", spark.sparkContext.uiWebUrl)
+
+    spark.conf.set("spark.sql.adaptive.enabled", "false")
+
     # Пути для сохранения данных на HDFS clients
-    hdfs_output_path = f"hdfs://{hdfs_server}/user/{user_hdfs}/study_project_b/{folder_name}/output_raw_json"  # Директория для временных файлов (JSON)
-    checkpoint_location = f"hdfs://{hdfs_server}/user/{user_hdfs}/study_project_b/{folder_name}/checkpoints"  # Директория для checkpoint-файлов
-    final_output_path = f"hdfs://{hdfs_server}/user/{user_hdfs}/study_project_b/{folder_name}/csv_files"  # Конечный файл с объединенными данными в CSV
+    hdfs_output_path = f"hdfs://{hdfs_server}/user/{user_hdfs}/{folder_name_global}/{folder_name}/output_raw_json"  # Директория для временных файлов (JSON)
+    checkpoint_location = f"hdfs://{hdfs_server}/user/{user_hdfs}/{folder_name_global}/{folder_name}/checkpoints"  # Директория для checkpoint-файлов
+    final_output_path = f"hdfs://{hdfs_server}/user/{user_hdfs}/{folder_name_global}/{folder_name}/csv_files"  # Конечный файл с объединенными данными в CSV
 
     # Чтение данных из Kafka топик
     df = spark.readStream \
