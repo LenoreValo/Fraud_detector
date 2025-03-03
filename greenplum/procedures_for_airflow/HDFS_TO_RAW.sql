@@ -10,13 +10,13 @@ AS $procedure$
 BEGIN
 	drop foreign table if exists raw.hdfs_clients_e_krylova;
 	CREATE EXTERNAL TABLE raw.hdfs_clients_e_krylova (
-		client_id float4,
+		client_id text,
 		client_first_name text,
 		client_last_name text,
 		client_email text,
 		client_phone text,
 		client_address text,
-		client_birthday date
+		client_birthday text
 	)
 	LOCATION ('pxf://user/e.krylova/study_project_b/clients/csv_files/*.csv?PROFILE=hdfs:text')
 	FORMAT 'CSV' (header=true);

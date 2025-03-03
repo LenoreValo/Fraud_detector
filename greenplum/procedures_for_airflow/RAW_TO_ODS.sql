@@ -27,7 +27,14 @@ BEGIN
 
     -- Вставка данных в таблицу 
 	INSERT INTO ods.clients_e_krylova
-	SELECT  distinct *
+	SELECT  distinct 
+				ods.safe_to_float_with_check(client_id) AS client_id,
+				client_first_name,
+				client_last_name,
+				client_email,
+				client_phone,
+				client_address,
+				ods.safe_to_date_with_check(client_birthday) AS client_birthday
 	FROM raw.hdfs_clients_e_krylova
 	where client_first_name not like '%NaN%' and client_last_name not like '%NaN%';
 END;
