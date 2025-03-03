@@ -19,15 +19,6 @@ default_args = {
     'retry_delay': timedelta(minutes=1)
 }
 
-#dag = DAG(
-#    dag_id = 'wave18_team_b_e_krylova',
-#    default_args=default_args,
-#    description='Simple pipeline DAG from Lenore',
-#    schedule_interval=timedelta(days=1),
-#    catchup=False,
-#    max_active_runs=1
-#)
-
 with DAG(
     dag_id = 'wave18_team_b_e_krylova',
     default_args=default_args,
@@ -44,59 +35,59 @@ with DAG(
         dag=dag,
     )
 #---------------------------------------------------------------------------------------------------------------------
-    #with TaskGroup("generators_to_kafka") as generators_to_kafka:
-    # Задача по отправке сгенерированных данных о клиентах в Kafka
-    client_generator_to_kafka = SSHOperator(
-        task_id='client_generator_to_kafka',
-        ssh_conn_id='e_krylova_ssh',
-        command="""
-            source /home/e.krylova/study_project/my_env/bin/activate && 
-            python3 /home/e.krylova/study_project/generators_kafka/client_generator_to_kafka.py
-        """,
-        dag=dag,
-    )
-    # Задача по отправке сгенерированных данных об активностях клиентов в Kafka
-    client_activity_generator_to_kafka = SSHOperator(
-        task_id='client_activity_generator_to_kafka',
-        ssh_conn_id='e_krylova_ssh',
-        command="""
-            source /home/e.krylova/study_project/my_env/bin/activate && 
-            python3 /home/e.krylova/study_project/generators_kafka/client_activity_generator_to_kafka.py
-        """,
-        dag=dag,
-    )
-    # Задача по отправке сгенерированных данных о логинах клиентов в Kafka
-    logins_generator_to_kafka = SSHOperator(
-        task_id='logins_generator_to_kafka',
-        ssh_conn_id='e_krylova_ssh',
-        command="""
-            source /home/e.krylova/study_project/my_env/bin/activate && 
-            python3 /home/e.krylova/study_project/generators_kafka/logins_generator_to_kafka.py
-        """,
-        dag=dag,
-    )
-    # Задача по отправке сгенерированных данных о платежах клиентов в Kafka
-    payments_generator_to_kafka = SSHOperator(
-        task_id='payments_generator_to_kafka',
-        ssh_conn_id='e_krylova_ssh',
-        command="""
-            source /home/e.krylova/study_project/my_env/bin/activate && 
-            python3 /home/e.krylova/study_project/generators_kafka/payments_generator_to_kafka.py
-        """,
-        dag=dag,
-    )
-    # Задача по отправке сгенерированных данных о транзакциях клиентов в Kafka
-    transactions_generator_to_kafka = SSHOperator(
-        task_id='transactions_generator_to_kafka',
-        ssh_conn_id='e_krylova_ssh',
-        command="""
-            source /home/e.krylova/study_project/my_env/bin/activate && 
-            python3 /home/e.krylova/study_project/generators_kafka/transactions_generator_to_kafka.py
-        """,
-        dag=dag,
-    )
-        #[client_generator_to_kafka, payments_generator_to_kafka] >> transactions_generator_to_kafka 
-        #transactions_generator_to_kafka  >> [logins_generator_to_kafka, client_activity_generator_to_kafka]
+    with TaskGroup("generators_to_kafka") as generators_to_kafka:
+        # Задача по отправке сгенерированных данных о клиентах в Kafka
+        client_generator_to_kafka = SSHOperator(
+            task_id='client_generator_to_kafka',
+            ssh_conn_id='e_krylova_ssh',
+            command="""
+                source /home/e.krylova/study_project/my_env/bin/activate && 
+                python3 /home/e.krylova/study_project/generators_kafka/client_generator_to_kafka.py
+            """,
+            dag=dag,
+        )
+        # Задача по отправке сгенерированных данных об активностях клиентов в Kafka
+        client_activity_generator_to_kafka = SSHOperator(
+            task_id='client_activity_generator_to_kafka',
+            ssh_conn_id='e_krylova_ssh',
+            command="""
+                source /home/e.krylova/study_project/my_env/bin/activate && 
+                python3 /home/e.krylova/study_project/generators_kafka/client_activity_generator_to_kafka.py
+            """,
+            dag=dag,
+        )
+        # Задача по отправке сгенерированных данных о логинах клиентов в Kafka
+        logins_generator_to_kafka = SSHOperator(
+            task_id='logins_generator_to_kafka',
+            ssh_conn_id='e_krylova_ssh',
+            command="""
+                source /home/e.krylova/study_project/my_env/bin/activate && 
+                python3 /home/e.krylova/study_project/generators_kafka/logins_generator_to_kafka.py
+            """,
+            dag=dag,
+        )
+        # Задача по отправке сгенерированных данных о платежах клиентов в Kafka
+        payments_generator_to_kafka = SSHOperator(
+            task_id='payments_generator_to_kafka',
+            ssh_conn_id='e_krylova_ssh',
+            command="""
+                source /home/e.krylova/study_project/my_env/bin/activate && 
+                python3 /home/e.krylova/study_project/generators_kafka/payments_generator_to_kafka.py
+            """,
+            dag=dag,
+        )
+        # Задача по отправке сгенерированных данных о транзакциях клиентов в Kafka
+        transactions_generator_to_kafka = SSHOperator(
+            task_id='transactions_generator_to_kafka',
+            ssh_conn_id='e_krylova_ssh',
+            command="""
+                source /home/e.krylova/study_project/my_env/bin/activate && 
+                python3 /home/e.krylova/study_project/generators_kafka/transactions_generator_to_kafka.py
+            """,
+            dag=dag,
+        )
+        [client_generator_to_kafka, payments_generator_to_kafka] >> transactions_generator_to_kafka 
+        transactions_generator_to_kafka  >> [logins_generator_to_kafka, client_activity_generator_to_kafka]
 
         #client_generator_to_kafka >> client_activity_generator_to_kafka >> logins_generator_to_kafka >> payments_generator_to_kafka >> transactions_generator_to_kafka
 #---------------------------------------------------------------------------------------------------------------------
@@ -235,11 +226,8 @@ with DAG(
 
 
 # Определение последовательности выполнения
-hello_task >> [client_generator_to_kafka, payments_generator_to_kafka]
-client_generator_to_kafka >> client_activity_generator_to_kafka
-payments_generator_to_kafka >> logins_generator_to_kafka
-[client_activity_generator_to_kafka, logins_generator_to_kafka] >> transactions_generator_to_kafka 
-transactions_generator_to_kafka >> kafka_to_hdfs 
+hello_task >> generators_to_kafka
+generators_to_kafka >> kafka_to_hdfs 
 kafka_to_hdfs >> hdfs_to_raw_greenplum
 hdfs_to_raw_greenplum >> raw_to_ods
 raw_to_ods >> ods_to_dds >> dds_to_dm
