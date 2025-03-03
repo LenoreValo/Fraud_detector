@@ -1,0 +1,130 @@
+-- Формирование RAW слоя с внешними данными
+---------------------------------------------------------------------------------------------------------------
+-- 1. Импорт данных с информацией о клиентах
+----------------------------------------------------------------------------------------------------------------
+-- Шаг 1: Создание внешней таблицы для всех CSV-файлов в HDFS
+
+CREATE OR REPLACE PROCEDURE raw.create_hdfs_to_raw_clients_e_krylova()
+ LANGUAGE plpgsql
+AS $procedure$
+BEGIN
+	drop foreign table if exists raw.hdfs_clients_e_krylova;
+	CREATE EXTERNAL TABLE raw.hdfs_clients_e_krylova (
+		client_id float4,
+		client_first_name text,
+		client_last_name text,
+		client_email text,
+		client_phone text,
+		client_address text,
+		client_birthday date
+	)
+	LOCATION ('pxf://user/e.krylova/study_project_b/clients/csv_files/*.csv?PROFILE=hdfs:text')
+	FORMAT 'CSV' (header=true);
+END;
+$procedure$
+;
+
+-----------------------------------------------------------------------------------------------------------------
+-- 2. Импорт данных с информацией об активности клиентов
+----------------------------------------------------------------------------------------------------------------
+-- Шаг 1: Создание внешней таблицы для всех CSV-файлов в HDFS
+CREATE OR REPLACE PROCEDURE raw.create_hdfs_to_raw_clients_activity_e_krylova()
+ LANGUAGE plpgsql
+AS $procedure$
+BEGIN
+	drop foreign table if exists raw.hdfs_clients_activity_e_krylova;
+	CREATE EXTERNAL TABLE raw.hdfs_clients_activity_e_krylova (
+		client_id text,
+		activity_date text,
+		activity_type text,
+		activity_location text,
+		ip_address text,
+		device text
+	)
+	LOCATION ('pxf://user/e.krylova/study_project_b/clients_activity/csv_files/*.csv?PROFILE=hdfs:text')
+	FORMAT 'CSV' (header=true);
+END;
+$procedure$
+;
+
+-----------------------------------------------------------------------------------------------------------------
+-- 3. Импорт данных с информацией о логинах
+----------------------------------------------------------------------------------------------------------------
+-- Шаг 1: Создание внешней таблицы для всех CSV-файлов в HDFS
+CREATE OR REPLACE PROCEDURE raw.create_hdfs_to_raw_logins_e_krylova()
+ LANGUAGE plpgsql
+AS $procedure$
+BEGIN
+	drop foreign table if exists raw.hdfs_logins_e_krylova;
+	CREATE EXTERNAL TABLE raw.hdfs_logins_e_krylova (
+		client_id text,
+		login_date text,
+		ip_address text,
+		location text,
+		device text
+	)
+	LOCATION ('pxf://user/e.krylova/study_project_b/logins/csv_files/*.csv?PROFILE=hdfs:text')
+	FORMAT 'CSV' (header=true);
+END;
+$procedure$
+;
+
+-----------------------------------------------------------------------------------------------------------------
+-- 4. Импорт данных с информацией о платежах
+----------------------------------------------------------------------------------------------------------------
+-- Шаг 1: Создание внешней таблицы для всех CSV-файлов в HDFS
+CREATE OR REPLACE PROCEDURE raw.create_hdfs_to_raw_payments_e_krylova()
+ LANGUAGE plpgsql
+AS $procedure$
+BEGIN
+	drop foreign table if exists raw.hdfs_payments_e_krylova;
+	CREATE EXTERNAL TABLE raw.hdfs_payments_e_krylova (
+		client_id text,
+		payment_id text,
+		payment_date text,
+		currency text,
+		amount text,
+		payment_method text
+	)
+	LOCATION ('pxf://user/e.krylova/study_project_b/payments/csv_files/*.csv?PROFILE=hdfs:text')
+	FORMAT 'CSV' (header=true);
+END;
+$procedure$
+;
+
+-----------------------------------------------------------------------------------------------------------------
+-- 5. Импорт данных с информацией о транзакциях
+----------------------------------------------------------------------------------------------------------------
+-- Шаг 1: Создание внешней таблицы для всех CSV-файлов в HDFS
+CREATE OR REPLACE PROCEDURE raw.create_hdfs_to_raw_transactions_e_krylova()
+ LANGUAGE plpgsql
+AS $procedure$
+BEGIN
+	drop foreign table if exists raw.hdfs_transactions_e_krylova;
+	CREATE EXTERNAL TABLE raw.hdfs_transactions_e_krylova (
+		client_id text,
+		transaction_id text,
+		transaction_date text,
+		transaction_type text,
+		account_number text,
+		currency text,
+		amount text,
+		record_saved_at text
+	)
+	LOCATION ('pxf://user/e.krylova/study_project_b/transactions/csv_files/*.csv?PROFILE=hdfs:text')
+	FORMAT 'CSV' (header=true);
+END;
+$procedure$
+;
+
+
+
+
+
+
+
+
+
+
+
+

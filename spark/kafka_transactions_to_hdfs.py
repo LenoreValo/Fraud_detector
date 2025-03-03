@@ -1,39 +1,21 @@
-import findspark
+#import findspark
 from pyspark.sql.types import StructType, StructField, DoubleType, StringType, TimestampType
 from pyspark.sql.functions import col, from_json
 from pyspark.sql import SparkSession
 import os
-import subprocess
-
-#-------------------------------------------------------------------------------------------------------------------
-# УДАЛЕНИЕ ПАПКИ В HDFS, ГДЕ ХРАНЯТСЯ ДАННЫЕ
-
-folder_name_global = 'study_project_b'
-# Путь к директории в HDFS
-hdfs_path = f"hdfs://172.17.0.23:8020/user/e.krylova/{folder_name_global}"
-
-# Команда для удаления директории
-command = f"hdfs dfs -rm -r {hdfs_path}"
-
-# Выполнение команды
-try:
-    result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    print(f"Директория {hdfs_path} успешно удалена.")
-except subprocess.CalledProcessError as e:
-    print(f"Ошибка при удалении директории: {e.stderr.decode('utf-8')}")
 
 #-------------------------------------------------------------------------------------------------------------------
 # ЗАГРУЗКА ДАННЫХ ИЗ KAFKA В HDFS 
 
-findspark.init()
+#findspark.init()
 
-os.environ['PYSPARK_SUBMIT_ARGS'] = "--packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.0 pyspark-shell"
+#os.environ['PYSPARK_SUBMIT_ARGS'] = "--packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.0 pyspark-shell"
 
 # Глобальные переменные
 kafka_bootstrap_servers = "172.17.0.13:9092"
 hdfs_server = '172.17.0.23:8020'
 user_hdfs = 'e.krylova'
-
+folder_name_global = 'study_project_b'
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Функция импорта данных из Kafka в HDFS
 def import_table_kafka_to_hdfs(hdfs_server, user_hdfs, kafka_topic, kafka_bootstrap_servers, folder_name, schema):
@@ -142,34 +124,6 @@ def import_table_kafka_to_hdfs(hdfs_server, user_hdfs, kafka_topic, kafka_bootst
     print(f"Данные успешно сохранены в {final_output_path}")
     
 #-------------------------------------------------------------------------------------------------------------------------------------------------------
-# Вызов функции для импорта данных о клиентах
-kafka_topic_clients = "e_krylova_clients_info"
-folder_name_clients='clients'
-schema_clients = {"client_id": DoubleType(), "client_first_name": StringType(), "client_last_name": StringType(), 
-          "client_email": StringType(), "client_phone": StringType(), "client_address":  StringType(), "client_birthday": StringType()}
-import_table_kafka_to_hdfs(hdfs_server, user_hdfs, kafka_topic_clients, kafka_bootstrap_servers, folder_name_clients, schema_clients)
-
-# Вызов функции для импорта данных об активностях
-kafka_topic_activity = "e_krylova_client_activity_info"
-folder_name_activity='clients_activity'
-schema_activity = {"client_id": DoubleType(), "activity_date": StringType(), "activity_type": StringType(), 
-          "activity_location": StringType(), "ip_address": StringType(), "device":  StringType()}
-import_table_kafka_to_hdfs(hdfs_server, user_hdfs, kafka_topic_activity, kafka_bootstrap_servers, folder_name_activity, schema_activity)
-
-# Вызов функции для импорта данных о логинах клиентов
-kafka_topic_logins = "e_krylova_logins_info"
-folder_name_logins='logins'
-schema_logins = {"client_id": DoubleType(), "login_date": StringType(), "ip_address": StringType(), 
-          "location": StringType(), "device":  StringType()}
-import_table_kafka_to_hdfs(hdfs_server, user_hdfs, kafka_topic_logins, kafka_bootstrap_servers, folder_name_logins, schema_logins)
-
-# Вызов функции для импорта данных о платежах
-kafka_topic_payments = "e_krylova_payments_info"
-folder_name_payments='payments'
-schema_payments = {"client_id": DoubleType(), "payment_id": DoubleType(), "payment_date": StringType(), 
-          "currency": StringType(), "amount":  DoubleType(), 'payment_method': StringType()}
-import_table_kafka_to_hdfs(hdfs_server, user_hdfs, kafka_topic_payments, kafka_bootstrap_servers, folder_name_payments, schema_payments)
-
 # Вызов функции для импорта данных о транзакциях
 kafka_topic_transactions = "e_krylova_transactions_info"
 folder_name_transactions='transactions'

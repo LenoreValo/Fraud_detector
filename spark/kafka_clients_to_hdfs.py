@@ -1,4 +1,4 @@
-import findspark
+#import findspark
 from pyspark.sql.types import StructType, StructField, DoubleType, StringType, TimestampType
 from pyspark.sql.functions import col, from_json
 from pyspark.sql import SparkSession
@@ -12,20 +12,24 @@ folder_name_global = 'study_project_b'
 # Путь к директории в HDFS
 hdfs_path = f"hdfs://172.17.0.23:8020/user/e.krylova/{folder_name_global}"
 
-# Команда для удаления директории
-command = f"hdfs dfs -rm -r {hdfs_path}"
+command = f"hdfs dfs -test -e {hdfs_path}"  # Проверяем существование директории
+result = subprocess.run(command, shell=True, capture_output=True, text=True)
 
-# Выполнение команды
-try:
-    result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    print(f"Директория {hdfs_path} успешно удалена.")
-except subprocess.CalledProcessError as e:
-    print(f"Ошибка при удалении директории: {e.stderr.decode('utf-8')}")
+if result.returncode == 0:  # Директория существует
+    try:
+        delete_command = f"hdfs dfs -rm -r {hdfs_path}"
+        subprocess.run(delete_command, shell=True)
+        print(f"Директория {hdfs_path} успешно удалена.")
+    except subprocess.CalledProcessError as e:
+        print(f"Ошибка при удалении директории: {e.stderr.decode('utf-8')}")
+
+else:  # Директория не существует
+    print(f"Директория {hdfs_path} не существует. Команда пропущена.")
 
 #-------------------------------------------------------------------------------------------------------------------
 # ЗАГРУЗКА ДАННЫХ ИЗ KAFKA В HDFS 
 
-findspark.init()
+#findspark.init()
 
 os.environ['PYSPARK_SUBMIT_ARGS'] = "--packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.0 pyspark-shell"
 
@@ -148,32 +152,3 @@ folder_name_clients='clients'
 schema_clients = {"client_id": DoubleType(), "client_first_name": StringType(), "client_last_name": StringType(), 
           "client_email": StringType(), "client_phone": StringType(), "client_address":  StringType(), "client_birthday": StringType()}
 import_table_kafka_to_hdfs(hdfs_server, user_hdfs, kafka_topic_clients, kafka_bootstrap_servers, folder_name_clients, schema_clients)
-
-# Вызов функции для импорта данных об активностях
-kafka_topic_activity = "e_krylova_client_activity_info"
-folder_name_activity='clients_activity'
-schema_activity = {"client_id": DoubleType(), "activity_date": StringType(), "activity_type": StringType(), 
-          "activity_location": StringType(), "ip_address": StringType(), "device":  StringType()}
-import_table_kafka_to_hdfs(hdfs_server, user_hdfs, kafka_topic_activity, kafka_bootstrap_servers, folder_name_activity, schema_activity)
-
-# Вызов функции для импорта данных о логинах клиентов
-kafka_topic_logins = "e_krylova_logins_info"
-folder_name_logins='logins'
-schema_logins = {"client_id": DoubleType(), "login_date": StringType(), "ip_address": StringType(), 
-          "location": StringType(), "device":  StringType()}
-import_table_kafka_to_hdfs(hdfs_server, user_hdfs, kafka_topic_logins, kafka_bootstrap_servers, folder_name_logins, schema_logins)
-
-# Вызов функции для импорта данных о платежах
-kafka_topic_payments = "e_krylova_payments_info"
-folder_name_payments='payments'
-schema_payments = {"client_id": DoubleType(), "payment_id": DoubleType(), "payment_date": StringType(), 
-          "currency": StringType(), "amount":  DoubleType(), 'payment_method': StringType()}
-import_table_kafka_to_hdfs(hdfs_server, user_hdfs, kafka_topic_payments, kafka_bootstrap_servers, folder_name_payments, schema_payments)
-
-# Вызов функции для импорта данных о транзакциях
-kafka_topic_transactions = "e_krylova_transactions_info"
-folder_name_transactions='transactions'
-schema_transactions = {"client_id": DoubleType(), "transaction_id": DoubleType(), "transaction_date": StringType(), 
-          "transaction_type": StringType(), "account_number":  StringType(), 'currency': StringType(),
-          "amount": DoubleType(), "record_saved_at": StringType()}
-import_table_kafka_to_hdfs(hdfs_server, user_hdfs, kafka_topic_transactions, kafka_bootstrap_servers, folder_name_transactions, schema_transactions)
