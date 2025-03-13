@@ -4,6 +4,7 @@ from airflow.operators.bash import BashOperator
 from airflow.providers.ssh.operators.ssh import SSHOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
+#from airflow.providers.jdbc.operators.jdbc import JdbcOperator
 from airflow.utils.task_group import TaskGroup
 
 def print_hello():
@@ -224,15 +225,20 @@ with DAG(
                 sql='CALL dm.load_transactions_e_krylova();'
         )
 #---------------------------------------------------------------------------------------------------------------------
-
-
+# Используйте conn_id, который вы создали
+#task_ch_test = JdbcOperator(
+#    task_id="test_ch_connection",
+#    jdbc_conn_id="e_krylova_clickhouse",
+#    sql="SELECT 1",  # Простой тестовый запрос
+#)
+#---------------------------------------------------------------------------------------------------------------------
 
 # Определение последовательности выполнения
 hello_task >> generators_to_kafka
 generators_to_kafka >> kafka_to_hdfs 
 kafka_to_hdfs >> hdfs_to_raw_greenplum
 hdfs_to_raw_greenplum >> raw_to_ods
-raw_to_ods >> ods_to_dds >> dds_to_dm
+raw_to_ods >> ods_to_dds >> dds_to_dm 
 
 
 
