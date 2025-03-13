@@ -38,7 +38,7 @@ git clone https://git.astondevs.ru/laboratory/hadoop/lab-projects/wave18_team_b.
 
 ## Схема архитектуры проекта
 
-![Схема архитектуры проекта](/images/Schema.png)
+![Схема архитектуры проекта](/images/Schema.jpg)
 
 ## Пошаговое действие
 

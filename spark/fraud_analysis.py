@@ -173,3 +173,4 @@ anomalies_df.show(10, truncate=True)
 anomalies_df.write.mode("overwrite").option("header", "true").csv(final_output_path)
 print(f"Данные успешно сохранены в {final_output_path}")
     
+spark.stop()

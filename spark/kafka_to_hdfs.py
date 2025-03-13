@@ -140,6 +140,7 @@ def import_table_kafka_to_hdfs(hdfs_server, user_hdfs, kafka_topic, kafka_bootst
     df_final.write.mode("overwrite").option("header", "true").csv(final_output_path)
 
     print(f"Данные успешно сохранены в {final_output_path}")
+    spark.stop()
     
 #-------------------------------------------------------------------------------------------------------------------------------------------------------
 # Вызов функции для импорта данных о клиентах

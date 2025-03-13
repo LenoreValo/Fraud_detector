@@ -23,7 +23,7 @@ with DAG(
     dag_id = 'wave18_team_b_e_krylova',
     default_args=default_args,
     description='Simple pipeline DAG from Lenore',
-    schedule_interval=timedelta(days=1),
+    schedule_interval='50 5 * * 1-5',  # Каждый будний день в 8:50 по МСК
     catchup=False,
     max_active_runs=1
 ) as dag:
@@ -96,37 +96,39 @@ with DAG(
         kafka_clients_to_hdfs = SSHOperator(
             task_id='kafka_clients_to_hdfs',
             ssh_conn_id='e_krylova_ssh',
-            command="spark-submit --conf spark.ui.port=5050 --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.3 /home/e.krylova/study_project/spark/kafka_clients_to_hdfs.py",
+            command="spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.3 /home/e.krylova/study_project/spark/kafka_clients_to_hdfs.py",
             dag=dag,
         )
         # Задача по передачи данных об активностях клиентов из Kafka в HDFS
         kafka_clients_activity_to_hdfs = SSHOperator(
             task_id='kafka_clients_activity_to_hdfs',
             ssh_conn_id='e_krylova_ssh',
-            command="spark-submit --conf spark.ui.port=5050 --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.3 /home/e.krylova/study_project/spark/kafka_clients_activity_to_hdfs.py",
+            command="spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.3 /home/e.krylova/study_project/spark/kafka_clients_activity_to_hdfs.py",
             dag=dag,
         )
         # Задача по передачи данных о логинах из Kafka в HDFS
         kafka_logins_to_hdfs = SSHOperator(
             task_id='kafka_logins_to_hdfs',
             ssh_conn_id='e_krylova_ssh',
-            command="spark-submit --conf spark.ui.port=5050 --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.3 /home/e.krylova/study_project/spark/kafka_logins_to_hdfs.py",
+            command="spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.3 /home/e.krylova/study_project/spark/kafka_logins_to_hdfs.py",
             dag=dag,
         )
         # Задача по передачи данных о платежах из Kafka в HDFS
         kafka_payments_to_hdfs = SSHOperator(
             task_id='kafka_payments_to_hdfs',
             ssh_conn_id='e_krylova_ssh',
-            command="spark-submit --conf spark.ui.port=5050 --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.3 /home/e.krylova/study_project/spark/kafka_payments_to_hdfs.py",
+            command="spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.3 /home/e.krylova/study_project/spark/kafka_payments_to_hdfs.py",
             dag=dag,
         )
         # Задача по передачи данных о транзакциях из Kafka в HDFS
         kafka_transactions_to_hdfs = SSHOperator(
             task_id='kafka_transactions_to_hdfs',
             ssh_conn_id='e_krylova_ssh',
-            command="spark-submit --conf spark.ui.port=5050 --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.3 /home/e.krylova/study_project/spark/kafka_transactions_to_hdfs.py",
+            command="spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.3 /home/e.krylova/study_project/spark/kafka_transactions_to_hdfs.py",
             dag=dag,
         )
+
+        # --conf spark.ui.port=5050 - явное указание порта в spark-submit
 
         kafka_clients_to_hdfs >> kafka_clients_activity_to_hdfs >> kafka_logins_to_hdfs >> kafka_payments_to_hdfs >> kafka_transactions_to_hdfs
 #---------------------------------------------------------------------------------------------------------------------
