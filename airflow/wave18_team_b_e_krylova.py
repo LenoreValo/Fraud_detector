@@ -5,6 +5,8 @@ from airflow.providers.ssh.operators.ssh import SSHOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 #from airflow.providers.jdbc.operators.jdbc import JdbcOperator
+from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+from airflow_clickhouse_plugin.operators.clickhouse import ClickHouseOperator
 from airflow.utils.task_group import TaskGroup
 
 def print_hello():
@@ -41,6 +43,8 @@ with DAG(
         client_generator_to_kafka = SSHOperator(
             task_id='client_generator_to_kafka',
             ssh_conn_id='e_krylova_ssh',
+            retries=3,
+            retry_delay=timedelta(minutes=1),
             command="""
                 source /home/e.krylova/study_project/my_env/bin/activate && 
                 python3 /home/e.krylova/study_project/generators_kafka/client_generator_to_kafka.py
@@ -51,6 +55,8 @@ with DAG(
         client_activity_generator_to_kafka = SSHOperator(
             task_id='client_activity_generator_to_kafka',
             ssh_conn_id='e_krylova_ssh',
+            retries=3,
+            retry_delay=timedelta(minutes=1),
             command="""
                 source /home/e.krylova/study_project/my_env/bin/activate && 
                 python3 /home/e.krylova/study_project/generators_kafka/client_activity_generator_to_kafka.py
@@ -61,6 +67,8 @@ with DAG(
         logins_generator_to_kafka = SSHOperator(
             task_id='logins_generator_to_kafka',
             ssh_conn_id='e_krylova_ssh',
+            retries=3,
+            retry_delay=timedelta(minutes=1),
             command="""
                 source /home/e.krylova/study_project/my_env/bin/activate && 
                 python3 /home/e.krylova/study_project/generators_kafka/logins_generator_to_kafka.py
@@ -71,6 +79,8 @@ with DAG(
         payments_generator_to_kafka = SSHOperator(
             task_id='payments_generator_to_kafka',
             ssh_conn_id='e_krylova_ssh',
+            retries=3,
+            retry_delay=timedelta(minutes=1),
             command="""
                 source /home/e.krylova/study_project/my_env/bin/activate && 
                 python3 /home/e.krylova/study_project/generators_kafka/payments_generator_to_kafka.py
@@ -81,6 +91,8 @@ with DAG(
         transactions_generator_to_kafka = SSHOperator(
             task_id='transactions_generator_to_kafka',
             ssh_conn_id='e_krylova_ssh',
+            retries=3,
+            retry_delay=timedelta(minutes=1),
             command="""
                 source /home/e.krylova/study_project/my_env/bin/activate && 
                 python3 /home/e.krylova/study_project/generators_kafka/transactions_generator_to_kafka.py
@@ -225,42 +237,300 @@ with DAG(
                 sql='CALL dm.load_transactions_e_krylova();'
         )
 #---------------------------------------------------------------------------------------------------------------------
-# Используйте conn_id, который вы создали
-#task_ch_test = JdbcOperator(
-#    task_id="test_ch_connection",
-#    jdbc_conn_id="e_krylova_clickhouse",
-#    sql="SELECT 1",  # Простой тестовый запрос
-#)
-#---------------------------------------------------------------------------------------------------------------------
+    with TaskGroup("dm_to_clickhouse") as dm_to_clickhouse:  
+        # 1. Удаление внешней таблицы с информацией о клиентах и их активностях и логинах (если существует)
+        drop_client_ext = ClickHouseOperator(
+            task_id="drop_external_table_clients",
+            clickhouse_conn_id="e_krylova_clickhouse",
+            database='default',
+            sql="""
+                DROP TABLE IF EXISTS wave18_team_b.gp_clients_activity_e_krylova;
+            """,
+        )
+        # 2. Создание внешней таблицы с информацией о клиентах и их активностях и логинах в ClickHouse
+        create_client_ext = ClickHouseOperator(
+            task_id="create_external_table_clients",
+            clickhouse_conn_id="e_krylova_clickhouse",
+            database='default',
+            sql="""
+                CREATE TABLE wave18_team_b.gp_clients_activity_e_krylova (
+                    client_id UInt32,
+                    client_first_name String,
+                    client_last_name String,
+                    client_email String,
+                    client_phone String,
+                    client_address String,
+                    client_birthday DATE,
+                    activity_date DateTime64(3, 'UTC'),
+                    activity_type_id Int,
+                    activity_type_name String,
+                    activity_location String, 
+                    ip_address_activity String,
+                    activity_device String, 
+                    login_date DateTime64(3, 'UTC'),
+                    ip_address_login String,
+                    login_location String,
+                    login_device String
+                ) ENGINE = PostgreSQL('172.17.1.32:5432', 'wave18_team_b', 'clients_activity_logins_e_krylova', 'gpadmin', 'gpadmin', 'dm');
+            """,
+        )
+        # 3. Удаление локальной таблицы с информацией о клиентах и их активностях и логинах в ClickHouse (если существует)
+        drop_client_local = ClickHouseOperator(
+            task_id="drop_local_table_clients",
+            clickhouse_conn_id="e_krylova_clickhouse",
+            database='default',
+            sql="""
+                DROP TABLE IF EXISTS wave18_team_b.clients_activity_e_krylova;
+            """,
+        )
+        # 4. Создание локальной таблицы в ClickHouse
+        create_client_local = ClickHouseOperator(
+            task_id="create_local_table_clients",
+            clickhouse_conn_id="e_krylova_clickhouse",
+            database='default',
+            sql="""
+                CREATE TABLE wave18_team_b.clients_activity_e_krylova (
+                    client_id UInt32,
+                    client_first_name String,
+                    client_last_name String,
+                    client_email String,
+                    client_phone String,
+                    client_address String,
+                    client_birthday DATE,
+                    activity_date DateTime64(3, 'UTC'),
+                    activity_type_id Int,
+                    activity_type_name String,
+                    activity_location String, 
+                    ip_address_activity IPv4,
+                    activity_device String, 
+                    login_date DateTime64(3, 'UTC'),
+                    ip_address_login IPv4,
+                    login_location String,
+                    login_device String
+                ) ENGINE = MergeTree()
+                ORDER BY client_id;
+            """,
+        )
+        # 5. Копирование данных из внешней таблицы в локальную таблицу
+        insert_client_local = ClickHouseOperator(
+            task_id="insert_local_table_clients",
+            clickhouse_conn_id="e_krylova_clickhouse",
+            database='default',
+            sql="""
+                INSERT INTO wave18_team_b.clients_activity_e_krylova
+                SELECT 
+                    client_id,
+                    client_first_name,
+                    client_last_name,
+                    client_email,
+                    client_phone,
+                    client_address,
+                    client_birthday,
+                    activity_date,
+                    activity_type_id,
+                    activity_type_name,
+                    activity_location, 
+                    CASE
+                        WHEN match(ip_address_activity, '^(\d{1,3}\.){3}\d{1,3}$') AND 
+                            toUInt32OrNull(splitByString('.', ip_address_activity)[1]) <= 255 AND
+                            toUInt32OrNull(splitByString('.', ip_address_activity)[2]) <= 255 AND
+                            toUInt32OrNull(splitByString('.', ip_address_activity)[3]) <= 255 AND
+                            toUInt32OrNull(splitByString('.', ip_address_activity)[4]) <= 255
+                        THEN toIPv4(ip_address_activity)
+                        ELSE NULL
+                    END AS ip_address_activity,
+                    activity_device, 
+                    login_date,
+                    CASE
+                        WHEN match(ip_address_login, '^(\d{1,3}\.){3}\d{1,3}$') AND 
+                            toUInt32OrNull(splitByString('.', ip_address_login)[1]) <= 255 AND
+                            toUInt32OrNull(splitByString('.', ip_address_login)[2]) <= 255 AND
+                            toUInt32OrNull(splitByString('.', ip_address_login)[3]) <= 255 AND
+                            toUInt32OrNull(splitByString('.', ip_address_login)[4]) <= 255
+                        THEN toIPv4(ip_address_login)
+                        ELSE NULL
+                    END AS ip_address_login,
+                    login_location,
+                    login_device
+                FROM wave18_team_b.gp_clients_activity_e_krylova;
+            """,
+        )
+#--------------------------------------------------------
+        # 1. Удаление внешней таблицы с информацией о транзакциях (если существует)
+        drop_transactions_ext = ClickHouseOperator(
+            task_id="drop_external_table_transactions",
+            clickhouse_conn_id="e_krylova_clickhouse",
+            database='default',
+            sql="""
+                drop table if exists gp_transactions_e_krylova;
+            """,
+        )
+        # 2. Создание внешней таблицы с информацией о транзакциях в ClickHouse
+        create_transactions_ext = ClickHouseOperator(
+            task_id="create_external_table_transactions",
+            clickhouse_conn_id="e_krylova_clickhouse",
+            database='default',
+            sql="""
+                create table gp_transactions_e_krylova(
+                    client_id UInt32,
+                    client_first_name String,
+                    client_last_name String,
+                    client_email String,
+                    client_phone String,
+                    client_address String,
+                    client_birthday DATE,
+                    account_number String,
+                    transaction_id UInt32,
+                    transaction_date DateTime64(3, 'UTC'),
+                    transaction_type_id UInt32,
+                    transaction_type_name String,
+                    currency_id UInt32,
+                    currency_name String,
+                    total_amount Decimal(15, 2)
+                ) ENGINE = PostgreSQL('172.17.1.32:5432', 'wave18_team_b', 'transactions_e_krylova', 'gpadmin', 'gpadmin', 'dm')
+                ;
+            """,
+        )
+        # 3. Удаление локальной таблицы с информацией о транзакциях в ClickHouse (если существует)
+        drop_transactions_local = ClickHouseOperator(
+            task_id="drop_local_table_transactions",
+            clickhouse_conn_id="e_krylova_clickhouse",
+            database='default',
+            sql="""
+                drop table if exists transactions_e_krylova;
+            """,
+        )
+        # 4. Создание локальной таблицы о транзакциях в ClickHouse
+        create_transactions_local = ClickHouseOperator(
+            task_id="create_local_table_transactions",
+            clickhouse_conn_id="e_krylova_clickhouse",
+            database='default',
+            sql="""
+                CREATE TABLE transactions_e_krylova
+                    (
+                        client_id UInt32,
+                        client_first_name String,
+                        client_last_name String,
+                        client_email String,
+                        client_phone String,
+                        client_address String,
+                        client_birthday DATE,
+                        account_number String,
+                        transaction_id UInt32,
+                        transaction_date DateTime64(3, 'UTC'),
+                        transaction_type_id UInt32,
+                        transaction_type_name String,
+                        currency_id UInt32,
+                        currency_name String,
+                        total_amount Decimal(15, 2)
+                    ) ENGINE = MergeTree()
+                    ORDER BY transaction_date;
+            """,
+        )
+        # 5. Копирование данных из внешней таблицы в локальную таблицу о транзакциях
+        insert_transactions_local = ClickHouseOperator(
+            task_id="insert_local_table_transactions",
+            clickhouse_conn_id="e_krylova_clickhouse",
+            database='default',
+            sql="""
+                INSERT INTO transactions_e_krylova
+                SELECT * FROM gp_transactions_e_krylova;
+            """,
+        )
+#--------------------------------------------------------
+        # 1. Удаление внешней таблицы с информацией о платежах (если существует)
+        drop_payments_ext = ClickHouseOperator(
+            task_id="drop_external_table_payments",
+            clickhouse_conn_id="e_krylova_clickhouse",
+            database='default',
+            sql="""
+                drop table if exists gp_payments_e_krylova;
+            """,
+        )
+        # 2. Создание внешней таблицы с информацией о платежах в ClickHouse
+        create_payments_ext = ClickHouseOperator(
+            task_id="create_external_table_payments",
+            clickhouse_conn_id="e_krylova_clickhouse",
+            database='default',
+            sql="""
+                create table gp_payments_e_krylova(
+                    client_id UInt32,
+                    client_first_name String,
+                    client_last_name String,
+                    client_email String,
+                    client_phone String,
+                    client_address String,
+                    client_birthday DATE,
+                    payment_id UInt32,
+                    account_number String,
+                    payment_date DateTime64(3, 'UTC'),
+                    currency_id UInt32,
+                    currency_name String,
+                    total_amount Decimal(15, 2),
+                    payment_method_id UInt32,
+                    payment_method_name String
+                ) ENGINE = PostgreSQL('172.17.1.32:5432', 'wave18_team_b', 'payments_e_krylova', 'gpadmin', 'gpadmin', 'dm')
+                ;
+            """,
+        )
+        # 3. Удаление локальной таблицы с информацией о платежах в ClickHouse (если существует)
+        drop_payments_local = ClickHouseOperator(
+            task_id="drop_local_table_payments",
+            clickhouse_conn_id="e_krylova_clickhouse",
+            database='default',
+            sql="""
+                drop table if exists payments_e_krylova;
+            """,
+        )
+        # 4. Создание локальной таблицы о платежах в ClickHouse
+        create_payments_local = ClickHouseOperator(
+            task_id="create_local_table_payments",
+            clickhouse_conn_id="e_krylova_clickhouse",
+            database='default',
+            sql="""
+                CREATE TABLE payments_e_krylova
+                    (
+                        client_id UInt32,
+                        client_first_name String,
+                        client_last_name String,
+                        client_email String,
+                        client_phone String,
+                        client_address String,
+                        client_birthday DATE,
+                        payment_id UInt32,
+                        account_number String,
+                        payment_date DateTime64(3, 'UTC'),
+                        currency_id UInt32,
+                        currency_name String,
+                        total_amount Decimal(15, 2),
+                        payment_method_id UInt32,
+                        payment_method_name String
+                    ) ENGINE = MergeTree()
+                    ORDER BY payment_date;
+            """,
+        )
+        # 5. Копирование данных из внешней таблицы в локальную таблицу о платежах
+        insert_payments_local = ClickHouseOperator(
+            task_id="insert_local_table_payments",
+            clickhouse_conn_id="e_krylova_clickhouse",
+            database='default',
+            sql="""
+                INSERT INTO payments_e_krylova
+                SELECT * FROM gp_payments_e_krylova;
+            """,
+        )
+
+
+        drop_client_ext >> create_client_ext >> drop_client_local >> create_client_local >> insert_client_local
+        drop_transactions_ext >> create_transactions_ext >> drop_transactions_local >> create_transactions_local >> insert_transactions_local
+        drop_payments_ext >> create_payments_ext >> drop_payments_local >> create_payments_local >> insert_payments_local
 
 # Определение последовательности выполнения
 hello_task >> generators_to_kafka
 generators_to_kafka >> kafka_to_hdfs 
 kafka_to_hdfs >> hdfs_to_raw_greenplum
 hdfs_to_raw_greenplum >> raw_to_ods
-raw_to_ods >> ods_to_dds >> dds_to_dm 
+raw_to_ods >> ods_to_dds >> dds_to_dm >> dm_to_clickhouse
 
 
-
-
-
-
-
-
-#hello_task >> [client_generator_to_kafka, payments_generator_to_kafka]
-#client_generator_to_kafka >> client_activity_generator_to_kafka
-#payments_generator_to_kafka >> logins_generator_to_kafka
-#[client_activity_generator_to_kafka, logins_generator_to_kafka] >> transactions_generator_to_kafka 
-
-#transactions_generator_to_kafka  >> kafka_clients_to_hdfs >> kafka_clients_activity_to_hdfs >> kafka_logins_to_hdfs >> kafka_payments_to_hdfs >> kafka_transactions_to_hdfs
-
-#kafka_transactions_to_hdfs >> [hdfs_to_raw_greenplum_clients, 
-#                               hdfs_to_raw_greenplum_clients_activity, 
-#                               hdfs_to_raw_greenplum_logins, 
-#                               hdfs_to_raw_greenplum_payments, 
-#                               hdfs_to_raw_greenplum_transactions]
-#kafka_transactions_to_hdfs >> hdfs_to_raw_greenplum
-#hdfs_to_raw_greenplum >> [raw_to_ods_clients, raw_to_ods_clients_activity, raw_to_ods_logins, raw_to_ods_payments, raw_to_ods_transactions]
-
-#[raw_to_ods_clients, raw_to_ods_clients_activity, raw_to_ods_logins, raw_to_ods_payments, raw_to_ods_transactions] >> ods_to_dds
 
