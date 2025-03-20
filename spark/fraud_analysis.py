@@ -86,7 +86,7 @@ def import_table_kafka_to_hdfs(kafka_topic, kafka_bootstrap_servers, schema):
     # Определяем схему для JSON
     json_schema = StructType(schema_list)
 
-    # Парсинг JSON,
+    # Парсинг JSON
     if "raw_data" in merged_df.columns:
         df_parsed = merged_df.withColumn("json_data", from_json(col("raw_data"), json_schema))
         # Выбор всех колонок из json_data
@@ -107,7 +107,7 @@ def import_table_kafka_to_hdfs(kafka_topic, kafka_bootstrap_servers, schema):
     return df_final
 
 #-------------------------------------------------------------------------------------------------------------------------------------------------------
-# Вызов функции для импорта данных
+# 1. Вызов функции для импорта данных
 schema_transactions = {"client_id": DoubleType(), "transaction_id": DoubleType(), "transaction_date": StringType(), 
           "transaction_type": StringType(), "account_number":  StringType(), 'currency': StringType(),
           "amount": DoubleType(), "record_saved_at": StringType()}
@@ -169,7 +169,6 @@ anomalies_df = anomalies_df.filter((col("is_count_anomaly") == True) | (col("is_
 anomalies_df.show(10, truncate=True)
 
 # 6. Сохранение данных в csv файл
-# Сохраняем результат в CSV формате
 anomalies_df.write.mode("overwrite").option("header", "true").csv(final_output_path)
 print(f"Данные успешно сохранены в {final_output_path}")
     

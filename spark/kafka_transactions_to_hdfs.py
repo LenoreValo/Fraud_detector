@@ -9,7 +9,7 @@ import os
 
 #findspark.init()
 
-#os.environ['PYSPARK_SUBMIT_ARGS'] = "--packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.0 pyspark-shell"
+os.environ['PYSPARK_SUBMIT_ARGS'] = "--packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.0 pyspark-shell"
 
 # Глобальные переменные
 kafka_bootstrap_servers = "172.17.0.13:9092"
@@ -27,8 +27,6 @@ def import_table_kafka_to_hdfs(hdfs_server, user_hdfs, kafka_topic, kafka_bootst
 
     # Вывод ссылки в Spark UI
     print("Активные Spark сессии:", spark.sparkContext.uiWebUrl)
-
-    #spark.conf.set("spark.sql.adaptive.enabled", "false")
 
     # Пути для сохранения данных на HDFS clients
     hdfs_output_path = f"hdfs://{hdfs_server}/user/{user_hdfs}/{folder_name_global}/{folder_name}/output_raw_json"  # Директория для временных файлов (JSON)

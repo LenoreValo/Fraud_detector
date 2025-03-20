@@ -50,8 +50,6 @@ def import_table_kafka_to_hdfs(hdfs_server, user_hdfs, kafka_topic, kafka_bootst
     # Вывод ссылки в Spark UI
     print("Активные Spark сессии:", spark.sparkContext.uiWebUrl)
 
-    #spark.conf.set("spark.sql.adaptive.enabled", "false")
-
     # Пути для сохранения данных на HDFS clients
     hdfs_output_path = f"hdfs://{hdfs_server}/user/{user_hdfs}/{folder_name_global}/{folder_name}/output_raw_json"  # Директория для временных файлов (JSON)
     checkpoint_location = f"hdfs://{hdfs_server}/user/{user_hdfs}/{folder_name_global}/{folder_name}/checkpoints"  # Директория для checkpoint-файлов

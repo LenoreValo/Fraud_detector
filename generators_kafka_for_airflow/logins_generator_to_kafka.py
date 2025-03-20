@@ -74,14 +74,14 @@ def get_logins_info():
 #---------------------------------------------------------------------------------------------
 # Адрес удаленного сервера Kafka
 kafka_server = '172.17.0.13:9092'  # сервер Kafka
-# Имена топиков Kafka
+# Имя топика Kafka
 kafka_topic_logins = "e_krylova_logins_info"
 #---------------------------------------------------------------------------------------------
 # ОЧИСТКА ТОПИКА
 
 # Настройка подключения к Kafka
 admin_client = AdminClient({'bootstrap.servers': kafka_server})
-
+# Функция пересоздания топика
 def recreate_topic(topic_name, num_partitions=1, replication_factor=1):
     # Удаляем топик
     try:
@@ -111,7 +111,7 @@ recreate_topic(kafka_topic_logins)
 def create_kafka_producer(kafka_server):
     config = {
         'bootstrap.servers': kafka_server,  # Адрес сервера Kafka
-        'acks': 'all',  # Подтверждение доставки (можно настроить)
+        'acks': 'all',
         'enable.idempotence': True          # Включаем идемпотентность для предотвращения дублирования
     }
     producer = Producer(config)
@@ -154,9 +154,8 @@ def send_df_to_kafka(df, topic, producer):
     # Ожидание завершения отправки всех сообщений
     producer.flush()
 
-# Использование
 if __name__ == "__main__":  
-    # Получаем датафреймы с информациями о клиентах, активностях, логинах, платежах и транзакциях
+    # Получаем датафреймы с информациями о логинах
     logins_df = get_logins_info()
         
     # Создание продьюсеров Kafka
