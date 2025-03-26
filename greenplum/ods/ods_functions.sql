@@ -59,7 +59,7 @@ CREATE OR REPLACE FUNCTION ods.safe_to_date_with_check(input_value TEXT)
 RETURNS DATE AS $$
 BEGIN
     -- Проверяем, соответствует ли строка формату ISO
-    IF input_value ~ '^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}$' THEN
+    IF input_value ~ '^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?([+-]\d{2}:\d{2}|Z)?)$' THEN
         RETURN input_value::DATE;
     ELSE
         RETURN NULL;  -- Возвращаем NULL для некорректных форматов

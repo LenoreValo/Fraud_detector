@@ -8,7 +8,7 @@ create schema if not exists ods;
 ----------------------------------------------------------------------------------------------------------------
 drop table if exists ods.clients_e_krylova;
 create table ods.clients_e_krylova (
-	client_id float4 not null primary key,
+	client_id float4 not null,
 	client_first_name varchar(50),
 	client_last_name varchar(50),
 	client_email varchar(255),
