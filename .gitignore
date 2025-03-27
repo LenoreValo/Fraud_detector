@@ -1,17 +1,9 @@
 # Файлы сборки
 .venv/
 
-# Маскирование данных
-Secret_info/
-
-# Источники данных
-source_data/
-
-# Зависимости
+# Библиотеки
 requirements.txt
 
 # Скомпилированные байт-коды
-__pycache__/
-*.py[cod]
-*$py.class
+*/__pycache__/
 
