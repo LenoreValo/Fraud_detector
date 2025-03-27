@@ -26,7 +26,7 @@ create table gp_clients_activity_e_krylova(
 	ip_address_login  String,
 	login_location String,
 	login_device String
-) ENGINE = PostgreSQL('172.17.1.32:5432', 'wave18_team_b', 'clients_activity_logins_e_krylova', 'gpadmin', 'gpadmin', 'dm')
+) ENGINE = PostgreSQL('172.17.1.32:5432', 'wave18_team_b', 'clients_activity_logins_e_krylova', 'gpadmin', '', 'dm')
 ;
 
 -- Создание таблицы в ClickHouse

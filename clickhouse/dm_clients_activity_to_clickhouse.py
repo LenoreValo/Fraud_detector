@@ -7,7 +7,7 @@ GREENPLUM_CONFIG = {
     "port": 5432,
     "database": "wave18_team_b",
     "user": "gpadmin",
-    "password": "gpadmin",
+    "password": "",
 }
 
 # Настройки подключения к ClickHouse
