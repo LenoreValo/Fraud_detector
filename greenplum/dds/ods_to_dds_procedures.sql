@@ -25,8 +25,10 @@ BEGIN
 END;
 $procedure$
 ;
+commit;
 ------------------------------------------------------------------------------------------------------
 -- 2. Вставка данных в таблицу с информацией о типах активностей
+begin transaction;
 CREATE OR REPLACE PROCEDURE dds.transform_and_load_activity_types_e_krylova()
  LANGUAGE plpgsql
 AS $procedure$
@@ -44,8 +46,10 @@ BEGIN
 END;
 $procedure$
 ;
+commit;
 ------------------------------------------------------------------------------------------------------
 -- 3. Вставка данных в таблицу с информацией об активностях клиентов
+begin transaction;
 CREATE OR REPLACE PROCEDURE dds.transform_and_load_clients_activity_e_krylova()
  LANGUAGE plpgsql
 AS $procedure$
@@ -70,9 +74,10 @@ BEGIN
 END;
 $procedure$
 ;
-
+commit;
 ------------------------------------------------------------------------------------------------------
 -- 4. Вставка данных в таблицу с информацией о логинах клиентов
+begin transaction;
 CREATE OR REPLACE PROCEDURE dds.transform_and_load_logins_e_krylova()
  LANGUAGE plpgsql
 AS $procedure$
@@ -95,9 +100,10 @@ BEGIN
 END;
 $procedure$
 ;
-
+commit;
 ------------------------------------------------------------------------------------------------------
 -- 5. Вставка данных в таблицу с информацией о типах валют
+begin transaction;
 CREATE OR REPLACE PROCEDURE dds.transform_and_load_currency_e_krylova()
  LANGUAGE plpgsql
 AS $procedure$
@@ -115,8 +121,10 @@ BEGIN
 END;
 $procedure$
 ;
+commit;
 ------------------------------------------------------------------------------------------------------
 -- 6. Вставка данных в таблицу с информацией о методах платежей
+begin transaction;
 CREATE OR REPLACE PROCEDURE dds.transform_and_load_payment_methods_e_krylova()
  LANGUAGE plpgsql
 AS $procedure$
@@ -134,8 +142,10 @@ BEGIN
 END;
 $procedure$
 ;
+commit;
 ------------------------------------------------------------------------------------------------------
 -- 7. Вставка данных в таблицу с информацией о платежах
+begin transaction;
 CREATE OR REPLACE PROCEDURE dds.transform_and_load_payments_e_krylova()
  LANGUAGE plpgsql
 AS $procedure$
@@ -160,9 +170,10 @@ BEGIN
 END;
 $procedure$
 ;
-
+commit;
 ------------------------------------------------------------------------------------------------------
 -- 8. Вставка данных в таблицу с информацией о методах платежей
+begin transaction;
 CREATE OR REPLACE PROCEDURE dds.transform_and_load_transaction_types_e_krylova()
  LANGUAGE plpgsql
 AS $procedure$
@@ -180,9 +191,10 @@ BEGIN
 END;
 $procedure$
 ;
-
+commit;
 ------------------------------------------------------------------------------------------------------
 -- 9. Вставка данных в таблицу с информацией о транзакциях
+begin transaction;
 CREATE OR REPLACE PROCEDURE dds.transform_and_load_transactions_e_krylova()
  LANGUAGE plpgsql
 AS $procedure$
@@ -208,46 +220,42 @@ BEGIN
 END;
 $procedure$
 ;
-
+commit;
 ---------------------------------------------------------------------------------------------------------------
 -- 1. Загрузка данных с информацией о клиентах
 ----------------------------------------------------------------------------------------------------------------
-
+begin transaction;
 CALL dds.transform_and_load_clients_e_krylova();
-
+commit;
 ---------------------------------------------------------------------------------------------------------------
 -- 2. Загрузка данных с информацией об активностях клиентов
 ----------------------------------------------------------------------------------------------------------------
-
+begin transaction;
 call dds.transform_and_load_activity_types_e_krylova();
 
 call dds.transform_and_load_clients_activity_e_krylova();
-
+commit;
 -----------------------------------------------------------------------------------------------------------------
 -- 3. Загрузка данных с информацией о логинах
 ----------------------------------------------------------------------------------------------------------------
-
+begin transaction;
 call dds.transform_and_load_logins_e_krylova();
-
+commit;
 -----------------------------------------------------------------------------------------------------------------
 -- 4. Загрузка данных с информацией о платежах
 ----------------------------------------------------------------------------------------------------------------
+begin transaction;
 call dds.transform_and_load_currency_e_krylova();
 
 call dds.transform_and_load_payment_methods_e_krylova();
 
 call dds.transform_and_load_payments_e_krylova();
-
+commit;
 -----------------------------------------------------------------------------------------------------------------
 -- 5. Загрузка данных с информацией о транзакциях
 ----------------------------------------------------------------------------------------------------------------
+begin transaction;
 call dds.transform_and_load_transaction_types_e_krylova();
 
 call dds.transform_and_load_transactions_e_krylova();
-
-
-
 commit;
-
-
-
