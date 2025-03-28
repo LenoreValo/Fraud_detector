@@ -32,7 +32,7 @@ DISTRIBUTED replicated
 -- Шаг 1: Создание таблицы типов активностей пользователей
 drop table if exists dds.clients_activity_types_e_krylova;
 create table dds.clients_activity_types_e_krylova (
-	activity_type_id SERIAL primary key,
+	activity_type_id SERIAL,
 	activity_type_name varchar(50) not null
 )
 distributed by (activity_type_id)
@@ -84,7 +84,7 @@ distributed by (client_id, login_date)
 -- Шаг 1: Создание таблицы валют
 drop table if exists dds.currency_e_krylova;
 create table dds.currency_e_krylova (
-	currency_id SERIAL primary key,
+	currency_id SERIAL,
 	currency_name varchar(3) not null
 )
 distributed by (currency_id)

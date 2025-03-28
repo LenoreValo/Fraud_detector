@@ -7,3 +7,5 @@ requirements.txt
 # Скомпилированные байт-коды
 */__pycache__/
 
+# Отдельные файлы
+greenplum/dds/dds_creation_tables.sql
