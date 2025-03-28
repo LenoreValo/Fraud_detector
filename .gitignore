@@ -9,3 +9,4 @@ requirements.txt
 
 # Отдельные файлы
 greenplum/dds/dds_creation_tables.sql
+greenplum/ods/ods_functions/ods_functions.sql
