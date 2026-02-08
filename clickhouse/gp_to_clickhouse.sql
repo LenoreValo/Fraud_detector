@@ -115,7 +115,7 @@ create table gp_transactions_e_krylova(
 	currency_id UInt32,
 	currency_name String,
 	total_amount Decimal(15, 2)
-) ENGINE = PostgreSQL('172.17.1.32:5432', 'wave18_team_b', 'transactions_e_krylova', 'gpadmin', 'gpadmin', 'dm')
+) ENGINE = PostgreSQL('172.17.1.32:5432', 'wave18_team_b', 'transactions_e_krylova', 'gpadmin', '', 'dm')
 ;
 
 -- Создание таблицы в ClickHouse
@@ -168,7 +168,7 @@ create table gp_payments_e_krylova(
 	total_amount Decimal(15, 2),
 	payment_method_id UInt32,
 	payment_method_name String
-) ENGINE = PostgreSQL('172.17.1.32:5432', 'wave18_team_b', 'payments_e_krylova', 'gpadmin', 'gpadmin', 'dm')
+) ENGINE = PostgreSQL('172.17.1.32:5432', 'wave18_team_b', 'payments_e_krylova', 'gpadmin', '', 'dm')
 ;
 
 -- Создание таблицы в ClickHouse

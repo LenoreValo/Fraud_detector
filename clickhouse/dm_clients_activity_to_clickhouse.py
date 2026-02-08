@@ -12,7 +12,7 @@ GREENPLUM_CONFIG = {
 
 # Настройки подключения к ClickHouse
 CLICKHOUSE_CONFIG = {
-    "host": "172.17.1.18",  # Замените на хост ClickHouse
+    "host": "172.17.1.18", 
     "port": 8123,
     "user": "",
     "password": "",
